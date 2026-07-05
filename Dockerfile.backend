@@ -1,0 +1,30 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+# Pre-install CPU version of PyTorch to skip massive GPU CUDA libraries (saves 2.5GB and 10+ minutes build time)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all python source modules
+COPY gateway/ ./gateway/
+COPY policy/ ./policy/
+COPY risk/ ./risk/
+COPY action/ ./action/
+COPY tools/ ./tools/
+COPY logger/ ./logger/
+COPY agents/ ./agents/
+COPY database/ ./database/
+COPY dashboard/ ./dashboard/
+COPY notifications/ ./notifications/
+COPY agent/ ./agent/
+COPY detectors/ ./detectors/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "gateway.app:app", "--host", "0.0.0.0", "--port", "8000"]
